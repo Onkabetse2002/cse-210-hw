@@ -1,54 +1,64 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using JournalApp;
 
-public class Journal
+namespace JournalApp
 {
-    public List<Entry> Entries { get; private set; }
-
-    public Journal()
+    public class Journal
     {
-        Entries = new List<Entry>();
-    }
+        private List<Entry> entries = new List<Entry>();
 
-    public void AddEntry(Entry entry)
-    {
-        Entries.Add(entry);
-    }
-
-    public void DisplayEntries()
-    {
-        foreach (var entry in Entries)
+        public void AddEntry(string prompt, string response)
         {
-            Console.WriteLine(entry);
+            entries.Add(new Entry(prompt, response));
         }
-    }
 
-    public void SaveToFile(string filename)
-    {
-        using (StreamWriter writer = new StreamWriter(filename))
+        public void DisplayEntries()
         {
-            foreach (var entry in Entries)
+            if (entries.Count == 0)
             {
-                writer.WriteLine($"{entry.Date}|{entry.Prompt}|{entry.Response}");
+                Console.WriteLine("No entries available.");
+                return;
+            }
+
+            foreach (var entry in entries)
+            {
+                Console.WriteLine(entry);
             }
         }
-    }
 
-    public void LoadFromFile(string filename)
-    {
-        Entries.Clear();
-        using (StreamReader reader = new StreamReader(filename))
+        public void SaveToFile(string filename)
         {
-            string line;
-            while ((line = reader.ReadLine()) != null)
+            using (StreamWriter writer = new StreamWriter(filename))
             {
-                var parts = line.Split('|');
-                if (parts.Length == 3)
+                foreach (var entry in entries)
                 {
-                    Entries.Add(new Entry(parts[1], parts[2]) { Date = parts[0] });
+                    writer.WriteLine(entry);
                 }
             }
+            Console.WriteLine($"Journal saved successfully to {filename}.");
+        }
+
+        public void LoadFromFile(string filename)
+        {
+            if (!File.Exists(filename))
+            {
+                Console.WriteLine("File not found.");
+                return;
+            }
+
+            entries.Clear();
+            string[] lines = File.ReadAllLines(filename);
+            foreach (string line in lines)
+            {
+                string[] parts = line.Split('|');
+                if (parts.Length == 3)
+                {
+                    entries.Add(new Entry(parts[1].Trim(), parts[2].Trim()) { Date = parts[0].Trim() });
+                }
+            }
+            Console.WriteLine("Journal loaded successfully.");
         }
     }
 }
